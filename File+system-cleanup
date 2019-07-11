@@ -1,1 +1,18 @@
-ggg
+#!/bin/bash
+
+# This script will perform cleanup activity in /var file system #
+
+# This will remove the old log files which are more than 30 Days #
+/usr/bin/find /var/log/ -type f \( -name "mess*" -o -name "tcp*" -o -name "nscd*" -o -name "secur*" -o -name "osad*" -o -name "dracut*" \) -mtime +30 -delete ;
+
+# This will clean cached YUM repository files #
+/usr/bin/yum clean all
+/usr/bin/yum --enablerepo=\* clean all
+/usr/bin/yum --enablerepo='*' clean all
+/bin/rm -rf /var/cache/yum/*
+
+# This will rebuild the YUM repository #
+/usr/bin/yum repolist
+
+# This will make the root's mail file as nullify which means the content of the file will be removed #
+> /var/spool/mail/root
