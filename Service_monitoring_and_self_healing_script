@@ -1,1 +1,69 @@
-service monitoring script
+#!/bin/bash
+LOG_FILE="/var/log/service_monitor.log"
+
+
+###This will check if log file exist, if so delete the old###############
+if [ -f /var/log/service_monitor.log ]
+then
+        rm -f /var/log/service_monitor.log
+        if [ -f /var/tmp/count_$(date --date="1 days ago" | awk -F" " {'print $3'}) ]
+        then
+           rm -f /var/tmp/count_$(date --date="1 days ago" | awk -F" " {'print $3'})
+        fi
+fi
+
+
+if [[ `whoami` == "root" ]]
+then
+        echo "Script is to Monitor Service Status" >> $LOG_FILE
+        echo "############################################" >> $LOG_FILE
+        echo "Checking NTP Status" >> $LOG_FILE
+        ntpstat -p | grep -Ew "unsynchronised|unspecified" >> $LOG_FILE
+        syn=$(echo $?)
+        /etc/init.d/ntpd status >  /dev/null
+        if [[ $? -eq 0 && $syn != 0 ]]
+        then
+                echo "ntp is running" >> $LOG_FILE
+        else
+                /etc/init.d/ntpd restart >/dev/null
+                sleep 60
+                /etc/init.d/ntpd status  > /dev/null
+                if [ $? -eq 0 ]
+                then
+                     if [ -f /var/tmp/count_$(date +"%d") ]
+                     then
+                        . /var/tmp/count_$(date +"%d")
+                         echo " NTP Service restarted successfully for $count time today" >> $LOG_FILE
+                         count=`expr $count + 1`
+                         echo "count=$count" > /var/tmp/count_$(date +"%d")
+                     else
+                        touch /var/tmp/count_$(date +"%d")
+                        echo "count=1" > /var/tmp/count_$(date +"%d")
+                        . /var/tmp/count_$(date +"%d")
+                        echo " NTP Service restarted successful for $count time today" >> $LOG_FILE
+                        count=`expr $count + 1`
+                        echo "count=$count" > /var/tmp/count_$(date +"%d")
+                    fi
+                fi
+        fi
+        echo "############################################" >> $LOG_FILE
+        chmod 755 $LOG_FILE
+        echo "Checking SNMP Status" >> $LOG_FILE
+        /etc/init.d/snmpd status > /dev/null
+        if [ $? -eq 0 ]
+        then
+                echo "snmp is running" >> $LOG_FILE
+        else
+                /etc/init.d/snmpd restart > /dev/null
+                sleep 5
+                /etc/init.d/snmpd status > /dev/null
+                if [ $? -eq 0 ]
+                then
+                    echo "Service restarted successful." >> $LOG_FILE
+                fi
+        fi
+else
+        echo "Please login as root user, script works only as root user". >> $LOG_FILE
+
+fi
+
