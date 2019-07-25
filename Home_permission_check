@@ -1,1 +1,44 @@
-home
+#!/bin/bash
+
+#Script to check that the users home directory permissions are correct, it looks for 777 and sets it to 700
+# get the ID the user is running with
+
+whoyouare=$(whoami)
+
+# check to ensureit is run as root user, exit if it is not
+if [ "$whoyouare" != "root" ]
+then
+   echo " ### ### ### "
+   echo " ### ### ### "
+   echo "This must be run as ROOT user.  Exiting ..."
+   echo " ### ### ### "
+   echo " ### ### ### "
+   exit 0
+fi
+
+# inform the user we are starting processing
+echo "Processing all home directories ..."
+
+worktodo=0
+
+# for every user with a home directory we want to check ...
+for user in $(find /home/ -maxdepth 1 -perm 777)
+do
+
+   worktodo=1
+
+   #fix it up
+   chmod 700 ${user}
+   echo "Fixing chmod 700 ${user}"
+
+done
+
+#report if we fixed anything
+if [ "${worktodo}" ==  "1" ]
+then
+   echo "Permissions fixed."
+else
+   echo "Nothing to do."
+fi
+
+
