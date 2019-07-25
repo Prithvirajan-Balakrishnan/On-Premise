@@ -1,1 +1,86 @@
-group
+#!/bin/bash
+
+#Script to check that the users home directory group ownership is correct, it's checked against /etc/passwd
+#
+#
+# Name: /opt/admin/bin/fugh.sh
+
+# get the ID the user is running with
+whoyouare=$(whoami)
+
+# check to stop it being run as root user, exit if it is
+if [ "$whoyouare" != "root" ]
+then
+   echo " ### ### ### "
+   echo " ### ### ### "
+   echo "This must be run as ROOT user.  Exiting ..."
+   echo " ### ### ### "
+   echo " ### ### ### "
+   exit 0
+fi
+
+# inform the user we are starting processing
+echo "Processing all home directories ..."
+
+# for every user with a home directory we want to check ...
+for user in $(ls -ld /home/* |  awk ' { print $3 } ')
+do
+
+
+#initialise variables each time through the loop
+  grpgrp=""
+  homedr=""
+  homedrA=""
+
+   # check we have a valid user
+   cat /etc/passwd | awk -F: ' {print $1} ' | grep "^${user}" >/dev/null
+   uservalid=$?
+   if [ ${uservalid} -eq 0 ]
+   then
+
+      #capture the group ID of the user ignoring errors from users that have a home dir but don't exist on the box
+      grpgrp=$(groups ${user} 2>/dev/null|  awk ' { print $3 } ')
+
+      #handle errors setting variables and stop, can't process without these
+      if [ "${grpgrp}"  == "" ]
+      then
+           echo "Failed to set variable, exiting something went wrong during capture of group ID"
+           exit 1
+      fi
+
+
+      #calculate the users home directory accurately ignorting errors for missing users as before
+      homedrA=$(finger ${user} 2>/dev/null| grep -i directory | awk ' {print $2} ')
+      homedr=$(ls -ld  ${homedrA} | awk ' {print $4} ')
+
+      #handle errors setting variables and stop, can't process without these
+      if [ "${homedrA}"  == "" ]
+      then
+           echo "Failed to set variable, exiting something went wrong during capture of user home directory location (finger)"
+           exit 1
+      fi
+
+      if [ "${homedr}"  == "" ]
+      then
+           echo "Failed to set variable, exiting something went wrong during capture of user home directory location ( ls -ld)"
+           exit 1
+      fi
+
+
+#echo "${homedirA} ... ${homedr}"
+
+      # tell us where the actual home directory ownership  doesn't  match /etc/passwd defined value
+      if  [ "${grpgrp}" == "${homedr}" ]
+      then
+         echo 1>/dev/null
+         echo "Nothing to do for  user ${user} home directory group is ${homedr} and should be ${grpgrp}"
+      else
+         # Inform the executor and Execute the automatic fix of the uiser home directory group ownership
+         echo "---=== AUTO Fixing ===--- :  Changing the user ${user} home directory group from ${homedr} to ${grpgrp}"
+         chgrp ${grpgrp} /home/${user}
+          #sleep 1
+      fi
+   else
+      echo "not valid" >/dev/null
+   fi
+done
