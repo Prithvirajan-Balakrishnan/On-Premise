@@ -2,7 +2,7 @@
 LOG_FILE="/var/log/service_monitor.log"
 
 
-###This will check if log file exist, if so delete the old###############
+###This will check if log file exist, if so delete the old#######
 if [ -f /var/log/service_monitor.log ]
 then
         rm -f /var/log/service_monitor.log
