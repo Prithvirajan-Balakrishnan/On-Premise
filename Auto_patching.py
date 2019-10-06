@@ -111,13 +111,6 @@ def wait_for_upgrade_job(seconds,EnvG):
                 notifier = 0
     print "Finished waiting after " + str(seconds * count) + " seconds"
 
-#               os.system("/usr/bin/curl -vv -X PUT -H "Accept:application/json,version=2"  -H "Content-Type:application/json" -u admin:Capital1 -d "{\"organization_id\":3,   \"included\":{\"search\":\" host_collection  =  RHEL-6-DEV-Hostgrp\"}, \"content_type\":\"package\", \"content\":[\"capitalone-CVusercreation*\"]}" https://satserver.domain.com//api/v2/hosts/bulk/install_content")
-
-#               os.system("/usr/bin/curl -vv -X PUT -H "Accept:application/json,version=2"  -H "Content-Type:application/json" -u admin:Capital1 -d "{\"organization_id\":3,   \"included\":{\"search\":\" host_collection  =  RHEL-6-DEV-Hostgrp-Manual\"}, \"content_type\":\"package\", \"content\":[\"capitalone-CVusercreation*\"]}" https://satserver.domain.com//api/v2/hosts/bulk/install_content")
-
-#time.sleep(600)
-
-
 def display_task_results(url,reportdir):
     results = get_results(url)
     if results:
