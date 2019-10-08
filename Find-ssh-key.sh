@@ -1,0 +1,1 @@
+Having SSH-key from one server and pushing it to manyservers and making passwordless authentication is ansecurity risk - this script search the ssh-key and delete then modify the .ssh dir to root:root and permissib to 640, this will stop users being to create new key
